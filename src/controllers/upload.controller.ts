@@ -12,10 +12,9 @@ export const uploadFile = async (
       return sendBadRequest(res, "No file uploaded");
     }
 
-    const { path } = req.file;
     const folder = req.body.folder || "tastyfruit";
 
-    const result = await uploadService.uploadImage(path, folder);
+    const result = await uploadService.uploadImage(req.file, folder);
 
     sendSuccess(res, result, "File uploaded successfully");
   } catch (error) {

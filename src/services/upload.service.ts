@@ -1,6 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import config from "../config/index.js";
-import fs from "fs";
 import path from "path";
 
 const BUCKET_NAME = "main";
@@ -24,13 +23,15 @@ function getSupabaseClient(): SupabaseClient {
   return supabaseClient;
 }
 
-export const uploadImage = async (filePath: string, folder = "publication") => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const uploadImage = async (
+  file: Express.Multer.File,
+  folder = "publication"
+) => {
   try {
     const supabase = getSupabaseClient();
 
-    // Read file
-    const fileBuffer = fs.readFileSync(filePath);
-    const fileName = path.basename(filePath);
+    const fileName = file.originalname;
     const ext = path.extname(fileName);
     const uniqueName = `${Date.now()}-${Math.random()
       .toString(36)
@@ -40,14 +41,11 @@ export const uploadImage = async (filePath: string, folder = "publication") => {
     // Upload to Supabase
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
-      .upload(storagePath, fileBuffer, {
+      .upload(storagePath, file.buffer, {
         cacheControl: "3600",
         upsert: true,
-        contentType: getContentType(ext),
+        contentType: file.mimetype,
       });
-
-    // Remove file from local storage after upload
-    fs.unlinkSync(filePath);
 
     if (error) {
       console.error("Supabase upload error:", error);
@@ -65,21 +63,6 @@ export const uploadImage = async (filePath: string, folder = "publication") => {
     };
   } catch (error) {
     console.error("Upload service error:", error);
-    // Attempt to remove file even if upload fails
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
     throw error;
   }
 };
-
-function getContentType(ext: string): string {
-  const types: Record<string, string> = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-  };
-  return types[ext.toLowerCase()] || "application/octet-stream";
-}
