@@ -12,7 +12,15 @@ export const uploadFile = async (
       return sendBadRequest(res, "No file uploaded");
     }
 
-    const folder = req.body.folder || "tastyfruit";
+    let folder = req.body.folder || "publication";
+    const allowedFolders = ["publication", "recipe"];
+
+    if (!allowedFolders.includes(folder)) {
+      return sendBadRequest(
+        res,
+        "Invalid folder. Allowed: publication, recipe"
+      );
+    }
 
     const result = await uploadService.uploadImage(req.file, folder);
 
