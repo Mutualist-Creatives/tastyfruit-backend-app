@@ -29,7 +29,8 @@ app.use(
 
       if (
         allowedOrigins.indexOf(origin) !== -1 ||
-        origin.endsWith(".vercel.app")
+        origin.endsWith(".vercel.app") ||
+        origin.endsWith(".tastyfruit.id")
       ) {
         callback(null, true);
       } else {
